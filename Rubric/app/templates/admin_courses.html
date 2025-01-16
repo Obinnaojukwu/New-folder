@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Select Course for {{ level }} Level in {{ faculty.name }}</h1>
+    <ul>
+        {% for course in courses %}
+        <li><a href="{{ url_for('admin_upload_audio', level=level, faculty_id=faculty.id, course_id=course.id) }}">{{ course.course_name }}</a></li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

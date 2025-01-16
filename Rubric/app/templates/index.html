@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>Welcome to Rubric</h1>
+  <h2>Select Your Level</h2>
+  <ul>
+    <li><a href="{{ url_for('levels', level=100) }}">100 Level</a></li>
+    <li><a href="{{ url_for('levels', level=200) }}">200 Level</a></li>
+    <li><a href="{{ url_for('levels', level=300) }}">300 Level</a></li>
+    <li><a href="{{ url_for('levels', level=400) }}">400 Level</a></li>
+  </ul>
+  <h2>Available Audios</h2>
+  <ul>
+    {% for audio in audios %}
+      <li>{{ audio.title }} - \${{ audio.price }}</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

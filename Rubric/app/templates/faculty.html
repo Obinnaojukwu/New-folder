@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>{{ faculty_name }}</h1>
+  <h2>Select Your Course</h2>
+  <ul>
+    {% for course in courses %}
+    <li><a href="{{ url_for('courses', level=level, faculty_id=faculty.id, course_id=course.id) }}">{{ course.name }}</a></li>
+
+    {% endfor %}
+  </ul>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>{{ level }} Level</h1>
+  <ul>
+    {% for faculty in faculties %}
+      <li><a href="{{ url_for('courses', faculty_id=faculty.id) }}">{{ faculty.name }}</a></li>
+    {% endfor %}
+  </ul>
+{% endblock %}

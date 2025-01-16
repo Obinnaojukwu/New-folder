@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>{{ course.name }}</h1>
+  <ul>
+    {% for audio in audios %}
+      <li>{{ audio.title }} - ${{ audio.price }} <a href="{{ url_for('download_audio', audio_id=audio.id) }}">Download</a></li>
+    {% endfor %}
+  </ul>
+  {% if current_user.is_admin %}
+    <a href="{{ url_for('upload_audio', course_id=course.id) }}">Upload Audio</a>
+  {% endif %}
+{% endblock %}

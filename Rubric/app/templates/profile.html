@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Profile</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='profile.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="particles-js"></div>
+    <div class="container">
+        <div class="back-button">
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">Back</a>
+        </div>
+        <div class="profile-header">
+            <h1>Update Profile</h1>
+        </div>
+        <form action="{{ url_for('profile') }}" method="POST" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.username.label }}<br>
+                {{ form.username(size=32, class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form.email.label }}<br>
+                {{ form.email(size=32, class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form.bio.label }}<br>
+                {{ form.bio(rows=4, cols=40, class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form.profile_picture.label }}<br>
+                {{ form.profile_picture(class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form.submit(class="btn btn-primary") }}
+            </div>
+        </form>
+    </div>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script src="{{ url_for('static', filename='particles-config.js') }}"></script>
+</body>
+</html>

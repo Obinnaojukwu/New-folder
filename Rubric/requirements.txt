@@ -1,0 +1,12 @@
+Flask
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-Login
+Flask-WTF
+Flask-Uploads
+Flask-Limiter
+stripe
+flask_bcrypt
+redis
+pillow
+email_validator

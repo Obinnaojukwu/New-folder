@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>Admin Dashboard</h1>
+  
+  <h2>Upload New Audio</h2>
+  <a href="{{ url_for('upload_audio') }}">Upload Audio</a>
+  
+  <h2>Purchased Audios</h2>
+  <p>Total Purchases: {{ total_purchases }}</p>
+  <p>Total Amount: ${{ total_amount }}</p>
+  <ul>
+    {% for purchase in purchases %}
+      <li>Audio ID: {{ purchase.audio_id }}, User ID: {{ purchase.user_id }}, Date: {{ purchase.date_purchased }}</li>
+    {% endfor %}
+  </ul>
+  
+  <h2>All Audio Files</h2>
+  <ul>
+    {% for audio in audios %}
+      <li>{{ audio.title }} - ${{ audio.price }}</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

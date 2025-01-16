@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>List of Audio Subjects Available</h1>
+  {% if audios %}
+    <ul>
+      {% for audio in audios %}
+        <li>{{ audio.title }} - <a href="{{ url_for('download_audio', audio_id=audio.id) }}">Download</a></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No course available.</p>
+    <a href="{{ url_for('index') }}">← Go back to select another course</a>
+  {% endif %}
+{% endblock %}

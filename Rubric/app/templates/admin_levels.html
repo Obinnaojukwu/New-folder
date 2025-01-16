@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Select Level</h1>
+    <ul>
+        {% for level in levels %}
+        <li><a href="{{ url_for('admin_faculties', level=level) }}">{{ level }} Level</a></li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

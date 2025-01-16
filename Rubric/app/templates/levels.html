@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>{{ level }} Level</h1>
+  <h2>Select Your Faculty</h2>
+  <ul>
+    <li><a href="{{ url_for('faculty', level=level, faculty_id=1) }}">Faculty of Agriculture</a></li>
+    <li><a href="{{ url_for('faculty', level=level, faculty_id=2) }}">Faculty of Arts</a></li>
+    <li><a href="{{ url_for('faculty', level=level, faculty_id=3) }}">Faculty of Education</a></li>
+    <li><a href="{{ url_for('faculty', level=level, faculty_id=4) }}">Faculty of Engineering</a></li>
+    <li><a href="{{ url_for('faculty', level=level, faculty_id=5) }}">Faculty of Law</a></li>
+    <li><a href="{{ url_for('faculty', level=level, faculty_id=6) }}">Faculty of Life Sciences</a></li>
+    <li><a href="{{ url_for('faculty', level=level, faculty_id=7) }}">Faculty of Management Sciences</a></li>
+    <li><a href="{{ url_for('faculty', level=level, faculty_id=8) }}">Faculty of Pharmacy</a></li>
+    <li><a href="{{ url_for('faculty', level=level, faculty_id=9) }}">Faculty of Physical Sciences</a></li>
+    <li><a href="{{ url_for('faculty', level=level, faculty_id=10) }}">Faculty of Social Sciences</a></li>
+    <li><a href="{{ url_for('faculty', level=level, faculty_id=11) }}">College of Medical Sciences</a></li>
+    <li><a href="{{ url_for('faculty', level=level, faculty_id=12) }}">Faculty of Environmental Sciences</a></li>
+  </ul>
+{% endblock %}

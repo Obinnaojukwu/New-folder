@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>Purchase Audio</h1>
+  <h2>{{ audio.title }}</h2>
+  <p>Price: ${{ audio.price }}</p>
+  <form method="POST">
+    <button type="submit" class="btn btn-primary">Confirm Purchase</button>
+  </form>
+{% endblock %}
