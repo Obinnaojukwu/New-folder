@@ -40,14 +40,13 @@ courses = {
     'Faculty of Environmental Sciences': ['Architecture', 'Building', 'Estate Management', 'Environmental Science', 'Quantity Surveying', 'Urban and Regional Planning']
 }
 
-
 with app.app_context():
     for faculty_name in faculties:
-        faculty = Faculty(name=faculty_name)
+        faculty = Faculty(name=faculty_name, department=faculty_name)  # Ensure the department field is populated
         db.session.add(faculty)
         db.session.commit()
         for course_name in courses[faculty_name]:
-            course = Course(name=course_name, faculty_id=faculty.id)
+            course = Course(course_name=course_name, faculty_id=faculty.id)
             db.session.add(course)
         db.session.commit()
 

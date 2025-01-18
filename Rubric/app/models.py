@@ -65,9 +65,6 @@ class Faculty(db.Model):
     department = db.Column(db.String(100), nullable=False)
     courses = db.relationship('Course', backref='faculty', lazy=True)
 
-    def __repr__(self):
-        return f"Faculty('{self.name}', '{self.department}')"
-
 class Course(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     course_name = db.Column(db.String(100), nullable=False)

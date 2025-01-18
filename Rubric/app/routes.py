@@ -1,10 +1,25 @@
-from flask import render_template, redirect, url_for, flash, request, current_app as app, send_from_directory
-from app import db
-from app.models import User, Audio, Payment, Faculty, Course, Purchase
+from datetime import datetime
+from functools import wraps
+from flask import render_template, redirect, url_for, flash, request, current_app as app, send_from_directory, abort
+from app import db, login
 from flask_login import current_user, login_user, logout_user, login_required
+from app.models import User, Audio, Payment, Faculty, Course, Purchase
 from app.forms import LoginForm, RegistrationForm, ProfileForm
 from werkzeug.utils import secure_filename
 import os
+
+# Bcrypt initialization
+from flask_bcrypt import Bcrypt
+bcrypt = Bcrypt()
+
+# Admin access decorator
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_admin:
+            abort(403)  # Forbidden
+        return f(*args, **kwargs)
+    return decorated_function
 
 # Home page route
 @app.route('/')
@@ -60,7 +75,7 @@ def profile():
         current_user.bio = form.bio.data
         if form.profile_picture.data:
             filename = secure_filename(form.profile_picture.data.filename)
-            file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             form.profile_picture.data.save(file_path)
             current_user.profile_image = filename
             flash(f'Profile picture saved as {filename}', 'success')
@@ -77,34 +92,32 @@ def profile():
 @app.route('/levels/<int:level>')
 @login_required
 def levels(level):
-    faculties = Faculty.query.all()
+    faculties = Faculty.query.filter(
+        Faculty.courses.any(Course.audios.any(Audio.level == level))
+    ).all()
     return render_template('levels.html', title=f'{level} Level', level=level, faculties=faculties)
 
+# Faculty route
 @app.route('/levels/<int:level>/faculty/<int:faculty_id>')
 @login_required
 def faculty(level, faculty_id):
     faculty = Faculty.query.get_or_404(faculty_id)
     courses = Course.query.filter_by(faculty_id=faculty_id).all()
-    current_app.logger.debug(f"Faculty: {faculty}, Courses: {courses}")
     return render_template('faculty.html', title=f'{faculty.name} Faculty', level=level, faculty=faculty, courses=courses)
 
-
+# Courses route
 @app.route('/levels/<int:level>/faculty/<int:faculty_id>/courses/<int:course_id>')
 @login_required
 def courses(level, faculty_id, course_id):
     course = Course.query.get_or_404(course_id)
-    current_app.logger.debug(f"Course: {course}")
     audios = Audio.query.filter_by(course_id=course.id).all()
     return render_template('courses.html', title=course.course_name, level=level, faculty_id=faculty_id, course=course, audios=audios)
 
 # Admin route
 @app.route('/admin')
 @login_required
+@admin_required
 def admin():
-    if not current_user.is_admin:
-        flash('You do not have access to this page.', 'danger')
-        return redirect(url_for('index'))
-    
     audios = Audio.query.all()
     purchases = Purchase.query.all()
     total_amount = sum(purchase.amount for purchase in Payment.query.all())
@@ -112,31 +125,29 @@ def admin():
     return render_template('admin.html', audios=audios, purchases=purchases, total_amount=total_amount, total_purchases=total_purchases)
 
 # Upload audio route
-@app.route('/admin/upload', methods=['GET', 'POST'])
+@app.route('/admin/upload_audio', methods=['POST'])
 @login_required
+@admin_required
 def upload_audio():
-    if not current_user.is_admin:
-        flash('You do not have access to this page.', 'danger')
-        return redirect(url_for('admin'))
-    
-    if request.method == 'POST':
-        title = request.form['title']
-        price = request.form['price']
-        course_id = request.form['course_id']
-        file = request.files['file']
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
-            audio = Audio(title=title, filename=filename, price=price, course_id=course_id)
-            db.session.add(audio)
-            db.session.commit()
-            flash('Audio uploaded successfully!', 'success')
-            return redirect(url_for('admin'))
-        else:
-            flash('Invalid file format.', 'danger')
-    courses = Course.query.all()
-    return render_template('upload_audio.html', courses=courses)
+    form = request.form
+    file = request.files.get('file')
+    if not file or not allowed_file(file.filename):
+        flash("Invalid file format.", "danger")
+        return redirect(request.referrer)
+    filename = secure_filename(file.filename)
+    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    audio = Audio(
+        title=form['title'],
+        price=form['price'],
+        course_id=form['course_id'],
+        filename=filename
+    )
+    db.session.add(audio)
+    db.session.commit()
+    flash("Audio uploaded successfully!", "success")
+    return redirect(url_for('admin'))
 
+# Purchase route
 @app.route('/purchase/<int:audio_id>', methods=['GET', 'POST'])
 @login_required
 def purchase_audio(audio_id):
@@ -152,74 +163,17 @@ def purchase_audio(audio_id):
         return redirect(url_for('download_audio', audio_id=audio.id))
     return render_template('purchase_audio.html', audio=audio)
 
-# Download audio route
+# Download route
 @app.route('/download/<int:audio_id>')
 @login_required
 def download_audio(audio_id):
+    purchase = Purchase.query.filter_by(user_id=current_user.id, audio_id=audio_id).first()
+    if not purchase:
+        flash("You need to purchase this audio before downloading.", "danger")
+        return redirect(url_for('index'))
     audio = Audio.query.get_or_404(audio_id)
-    payment = Payment.query.filter_by(user_id=current_user.id, audio_id=audio_id).first()
-    if not payment:
-        flash('You need to pay before downloading this audio.', 'danger')
-        return redirect(url_for('courses', level=audio.course.level, faculty_id=audio.course.faculty_id, course_id=audio.course_id))
-    return send_from_directory(current_app.config['UPLOAD_FOLDER'], audio.filename, as_attachment=True)
-# Route to select level
-@app.route('/admin/levels')
-@login_required
-def admin_levels():
-    if not current_user.is_admin:
-        flash('You do not have access to this page.', 'danger')
-        return redirect(url_for('index'))
-    
-    levels = [100, 200, 300, 400]
-    return render_template('admin_levels.html', levels=levels)
+    return send_from_directory(app.config['UPLOAD_FOLDER'], audio.filename, as_attachment=True)
 
-# Route to select faculty based on level
-@app.route('/admin/levels/<int:level>/faculties')
-@login_required
-def admin_faculties(level):
-    if not current_user.is_admin:
-        flash('You do not have access to this page.', 'danger')
-        return redirect(url_for('index'))
-    
-    faculties = Faculty.query.all()
-    return render_template('admin_faculties.html', level=level, faculties=faculties)
-
-# Route to select course based on faculty and level
-@app.route('/admin/levels/<int:level>/faculties/<int:faculty_id>/courses')
-@login_required
-def admin_courses(level, faculty_id):
-    if not current_user.is_admin:
-        flash('You do not have access to this page.', 'danger')
-        return redirect(url_for('index'))
-    
-    courses = Course.query.filter_by(faculty_id=faculty_id).all()
-    return render_template('admin_courses.html', level=level, faculty_id=faculty_id, courses=courses)
-
-# Route to upload audio file based on course, faculty, and level
-@app.route('/admin/levels/<int:level>/faculties/<int:faculty_id>/courses/<int:course_id>/upload', methods=['GET', 'POST'])
-@login_required
-def admin_upload_audio(level, faculty_id, course_id):
-    if not current_user.is_admin:
-        flash('You do not have access to this page.', 'danger')
-        return redirect(url_for('index'))
-    
-    if request.method == 'POST':
-        title = request.form['title']
-        price = request.form['price']
-        file = request.files['file']
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
-            audio = Audio(title=title, filename=filename, price=price, course_id=course_id)
-            db.session.add(audio)
-            db.session.commit()
-            flash('Audio uploaded successfully!', 'success')
-            return redirect(url_for('admin_courses', level=level, faculty_id=faculty_id))
-        else:
-            flash('Invalid file format.', 'danger')
-    
-    return render_template('admin_upload_audio.html', level=level, faculty_id=faculty_id, course_id=course_id)
-
-# Helper function to check allowed file extensions
+# Helper function for allowed files
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
